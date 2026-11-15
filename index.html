@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.1.0/dist/iconify-icon.min.js"></script>
 <style>
   /* Layout: one centred column; summary cards, then tabs, then item cards grouped by category. */
   :root {
@@ -138,19 +139,56 @@
   @media (prefers-reduced-motion: no-preference) {
     .btn, .tab, .chip, .sum-card, .item { transition: border-color .12s, background-color .12s, color .12s, box-shadow .12s; }
   }
+
+  /* Icons (Iconify, Solar bold duotone) */
+  iconify-icon { display: inline-block; width: 1em; height: 1em; font-size: 1.25em; flex: none; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .top h1 { display: flex; align-items: center; gap: 10px; }
+  .top h1 iconify-icon { font-size: 1.2em; color: var(--accent); }
+  .sum-label, .chip, .badge-low, .order-cat { display: inline-flex; align-items: center; gap: 6px; }
+  .group h2 { display: flex; align-items: center; gap: 6px; }
+  .sum-label iconify-icon, .group h2 iconify-icon, .order-cat iconify-icon { color: var(--accent); }
+  .stepper button { display: grid; place-items: center; }
+  .stepper button iconify-icon { font-size: 24px; color: var(--accent); }
+
+  /* Motion layer: particles behind the page, butterfly above it */
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .wrap { position: relative; z-index: 1; }
+  .butterfly { position: fixed; left: 0; top: 0; width: 38px; height: 38px; margin: -19px 0 0 -19px; z-index: 30; pointer-events: none; will-change: transform; }
+  .butterfly svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(38, 42, 23, .18)); }
+  .butterfly .wings { transform-box: view-box; transform-origin: 50% 50%; animation: flap .2s ease-in-out infinite alternate; }
+  @keyframes flap { from { transform: scaleX(1); } to { transform: scaleX(.2); } }
+  .item, .sum-card { will-change: transform; }
+  @media (prefers-reduced-motion: reduce) { #fx, .butterfly { display: none; } }
 </style>
 </head>
 <body>
 
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="butterfly" id="butterfly" aria-hidden="true" hidden>
+  <svg viewBox="0 0 40 40">
+    <g class="wings">
+      <path d="M20 19 C14 6 3 5 3 13 C3 19 11 21 20 20 Z" fill="#e8590c"/>
+      <path d="M20 19 C26 6 37 5 37 13 C37 19 29 21 20 20 Z" fill="#e8590c"/>
+      <path d="M20 21 C13 21 7 25 9 31 C11 36 18 30 20 22 Z" fill="#f08c4a"/>
+      <path d="M20 21 C27 21 33 25 31 31 C29 36 22 30 20 22 Z" fill="#f08c4a"/>
+      <circle cx="9" cy="12" r="2" fill="#fff1e6"/>
+      <circle cx="31" cy="12" r="2" fill="#fff1e6"/>
+    </g>
+    <rect x="19" y="12" width="2" height="16" rx="1" fill="#262a17"/>
+    <path d="M20 13 C18 9 16 8 15 7 M20 13 C22 9 24 8 25 7" stroke="#262a17" stroke-width="1" fill="none" stroke-linecap="round"/>
+  </svg>
+</div>
+
 <div class="wrap" id="view-app">
   <header class="top">
     <div>
-      <h1>Café Stock Tracker</h1>
+      <h1><iconify-icon icon="solar:cup-hot-bold-duotone" aria-hidden="true"></iconify-icon>Café Stock Tracker</h1>
       <div class="top-sub" id="last-count">Loading stock…</div>
     </div>
     <div class="top-actions">
-      <button class="btn" id="btn-refresh" type="button">Refresh</button>
-      <button class="btn" id="btn-export" type="button" disabled>Export PDF</button>
+      <button class="btn" id="btn-refresh" type="button"><iconify-icon icon="solar:refresh-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Refresh</span></button>
+      <button class="btn" id="btn-export" type="button" disabled><iconify-icon icon="solar:file-download-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Export PDF</span></button>
     </div>
   </header>
 
@@ -165,8 +203,8 @@
 
 <div class="savebar" id="savebar" hidden>
   <span id="savebar-text"></span>
-  <button class="btn btn-primary" id="btn-save-all" type="button">Save all changes</button>
-  <button class="btn btn-quiet" id="btn-discard-all" type="button">Discard</button>
+  <button class="btn btn-primary" id="btn-save-all" type="button"><iconify-icon icon="solar:diskette-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Save all changes</span></button>
+  <button class="btn btn-quiet" id="btn-discard-all" type="button"><iconify-icon icon="solar:trash-bin-trash-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Discard</span></button>
 </div>
 
 <script>
@@ -204,6 +242,12 @@
     }
     return el;
   }
+  /** A Solar bold duotone icon from Iconify. */
+  const icon = (name) => h('iconify-icon', {icon: `solar:${name}-bold-duotone`, 'aria-hidden': 'true'});
+  const label = (text) => h('span', {'data-label': ''}, text);
+  const setLabel = (btn, text) => { btn.querySelector('[data-label]').textContent = text; };
+  const CAT_ICONS = {'Milk': 'bottle', 'Coffee': 'cup-hot', 'Cups & packaging': 'cup-paper', 'Syrups & powders': 'test-tube', 'Bakery': 'donut'};
+  const catIcon = (c) => CAT_ICONS[c] || 'box-minimalistic';
   const keyOf = (r) => r.outlet + '|' + r.sku;
   const valid = (v) => Number.isInteger(v) && v >= 0 && v <= MAX_QTY;
   const isDirty = (key) => edits.has(key);
@@ -328,7 +372,7 @@
   $('btn-export').addEventListener('click', () => {
     if (!rows.length) return;
     const btn = $('btn-export');
-    const flash = (text) => { btn.textContent = text; setTimeout(() => { btn.textContent = 'Export PDF'; }, 2200); };
+    const flash = (text) => { setLabel(btn, text); setTimeout(() => { setLabel(btn, 'Export PDF'); }, 2200); };
     if (!window.jspdf || !window.jspdf.jsPDF.API.autoTable) { flash('PDF tool not loaded'); return; }
     try {
       buildPdf().save(`cafe-stock-${today()}.pdf`);
@@ -385,15 +429,15 @@
     const box = $('summary');
     box.replaceChildren(...outlets().map((name) =>
       h('button', {class: 'sum-card', type: 'button', 'data-outlet': name, onclick: () => selectTab(name)},
-        h('span', {class: 'sum-label'}, name),
+        h('span', {class: 'sum-label'}, icon('shop'), name),
         h('span', {class: 'sum-value num', 'data-role': 'value'}, '0'),
         h('span', {class: 'sum-note', 'data-role': 'note'}, ''))));
   }
 
   function renderTabs() {
     const nav = $('tabs');
-    const tab = (id, label) => h('button', {class: 'tab', type: 'button', role: 'tab', 'data-tab': id, onclick: () => selectTab(id)},
-      label, h('span', {class: 'pill num', 'data-role': 'pill'}, '0'));
+    const tab = (id, text) => h('button', {class: 'tab', type: 'button', role: 'tab', 'data-tab': id, onclick: () => selectTab(id)},
+      icon(id === ORDER_TAB ? 'cart-large-2' : 'shop'), text, h('span', {class: 'pill num', 'data-role': 'pill'}, '0'));
     nav.replaceChildren(...outlets().map((name) => tab(name, name)), tab(ORDER_TAB, 'Order from suppliers'));
   }
 
@@ -446,10 +490,10 @@
       ['All', ...cats].map((c) => h('button', {
         class: 'chip', type: 'button', 'aria-pressed': String(c === activeCategory),
         onclick: () => { activeCategory = c; renderPanel(); },
-      }, c === 'All' ? 'All categories' : c)));
+      }, icon(c === 'All' ? 'widget' : catIcon(c)), c === 'All' ? 'All categories' : c)));
     const shown = activeCategory === 'All' ? cats : [activeCategory];
     const groups = shown.map((c) => h('div', {class: 'group'},
-      h('h2', {}, c),
+      h('h2', {}, icon(catIcon(c)), c),
       mine.filter((r) => r.category === c).map(buildCard)));
     panel.replaceChildren(h('div', {class: 'group', style: 'gap:18px'},
       chips, mine.length ? groups : h('div', {class: 'panel empty'}, 'No items for this outlet yet.')));
@@ -458,7 +502,7 @@
   function buildCard(r) {
     const key = keyOf(r);
     const idBase = 'f-' + key.replace(/[^a-zA-Z0-9]+/g, '-');
-    const badge = h('span', {class: 'badge-low'}, 'Low');
+    const badge = h('span', {class: 'badge-low'}, icon('danger-triangle'), 'Low');
     const status = h('div', {class: 'item-status', role: 'status'});
 
     function current() {
@@ -472,8 +516,8 @@
       sync(false);
       updateChrome();
     }
-    function control(field, label, saved) {
-      const input = h('input', {id: `${idBase}-${field}`, inputmode: 'numeric', autocomplete: 'off', 'aria-label': `${label} for ${r.item_name}`});
+    function control(field, title, saved) {
+      const input = h('input', {id: `${idBase}-${field}`, inputmode: 'numeric', autocomplete: 'off', 'aria-label': `${title} for ${r.item_name}`});
       const box = h('div', {class: 'stepper'});
       const step = (d) => {
         const cur = current()[field];
@@ -488,17 +532,17 @@
       });
       input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && !saveBtn.disabled) save([key]); });
       box.append(
-        h('button', {type: 'button', 'aria-label': `Decrease ${label.toLowerCase()} for ${r.item_name}`, onclick: () => step(-1)}, '−'),
+        h('button', {type: 'button', 'aria-label': `Decrease ${title.toLowerCase()} for ${r.item_name}`, onclick: () => step(-1)}, icon('minus-circle')),
         input,
-        h('button', {type: 'button', 'aria-label': `Increase ${label.toLowerCase()} for ${r.item_name}`, onclick: () => step(1)}, '+'));
-      return {input, box, el: h('div', {class: 'ctl'}, h('label', {class: 'ctl-label', for: input.id}, label), box)};
+        h('button', {type: 'button', 'aria-label': `Increase ${title.toLowerCase()} for ${r.item_name}`, onclick: () => step(1)}, icon('add-circle')));
+      return {input, box, el: h('div', {class: 'ctl'}, h('label', {class: 'ctl-label', for: input.id}, title), box)};
     }
     const qty = control('qty', 'On hand', () => r.qty_on_hand);
     const reorder = control('reorder', 'Reorder level', () => r.reorder_level);
-    const saveBtn = h('button', {class: 'btn btn-primary', type: 'button', onclick: () => save([key])}, 'Save');
+    const saveBtn = h('button', {class: 'btn btn-primary', type: 'button', onclick: () => save([key])}, icon('diskette'), label('Save'));
     const undoBtn = h('button', {class: 'btn btn-quiet', type: 'button', onclick: () => {
       edits.delete(key); cardNote.delete(key); sync(true); updateChrome();
-    }}, 'Undo');
+    }}, icon('undo-left-round'), 'Undo');
 
     const card = h('article', {class: 'item'},
       h('div', {class: 'item-main'},
@@ -522,7 +566,7 @@
       badge.hidden = !isLow(r);
       card.classList.toggle('is-dirty', dirty);
       saveBtn.disabled = !dirty || !okQty || !okRe || busy;
-      saveBtn.textContent = busy ? 'Saving…' : 'Save';
+      setLabel(saveBtn, busy ? 'Saving…' : 'Save');
       undoBtn.hidden = !dirty || busy;
       qty.input.disabled = reorder.input.disabled = busy;
       const note = cardNote.get(key);
@@ -558,7 +602,7 @@
   }
   function buildOrder() {
     const lines = orderLines();
-    const copyBtn = h('button', {class: 'btn btn-primary', type: 'button'}, 'Copy list');
+    const copyBtn = h('button', {class: 'btn btn-primary', type: 'button'}, icon('copy'), label('Copy list'));
     copyBtn.addEventListener('click', async () => {
       const text = orderText(lines);
       let ok = false;
@@ -569,8 +613,8 @@
         try { ok = document.execCommand('copy'); } catch (_e) { ok = false; }
         ta.remove();
       }
-      copyBtn.textContent = ok ? 'Copied' : 'Copy failed';
-      setTimeout(() => { copyBtn.textContent = 'Copy list'; }, 1800);
+      setLabel(copyBtn, ok ? 'Copied' : 'Copy failed');
+      setTimeout(() => { setLabel(copyBtn, 'Copy list'); }, 1800);
     });
     copyBtn.disabled = !lines.length;
     const unsaved = edits.size;
@@ -583,7 +627,7 @@
       unsaved ? h('div', {class: 'notice'}, `Includes ${unsaved} unsaved ${unsaved === 1 ? 'change' : 'changes'}. Save to keep ${unsaved === 1 ? 'it' : 'them'}.`) : null,
       lines.length
         ? lines.map((l) => h('div', {class: 'order-row'},
-            h('div', {}, h('div', {class: 'order-cat'}, l.category), h('div', {class: 'order-name'}, l.name)),
+            h('div', {}, h('div', {class: 'order-cat'}, icon(catIcon(l.category)), l.category), h('div', {class: 'order-name'}, l.name)),
             h('div', {class: 'order-qty num'}, String(l.total), ' ', h('small', {}, plural(l.unit, l.total))),
             h('div', {class: 'order-split num'}, l.split.map((s) => `${s.outlet} ${s.short}`).join(' · '))))
         : h('div', {class: 'empty'}, 'Nothing to order. Every item is at or above its reorder level.'));
@@ -601,8 +645,141 @@
   });
   window.addEventListener('beforeunload', (ev) => { if (edits.size) { ev.preventDefault(); ev.returnValue = ''; } });
 
+  // ---- motion: particles, butterfly, card wobble ------------------------
+  (function motion() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const canvas = $('fx'), ctx = canvas.getContext('2d'), fly = $('butterfly');
+    const COLORS = ['rgba(111,118,32,.20)', 'rgba(196,191,113,.40)', 'rgba(150,158,70,.26)', 'rgba(232,89,12,.14)'];
+    const pointer = {x: 0, y: 0, seen: false};
+    let W = 0, H = 0, parts = [];
+
+    function spawn(anywhere) {
+      return {
+        x: Math.random() * W, y: anywhere ? Math.random() * H : H + 12,
+        r: 1.5 + Math.random() * 4.5, vx: 0, vy: 0,
+        rise: 6 + Math.random() * 16, sway: 8 + Math.random() * 18, phase: Math.random() * 6.283,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      };
+    }
+    function resize() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.max(18, Math.min(70, Math.round(W * H / 22000)));
+      while (parts.length < n) parts.push(spawn(true));
+      parts.length = n;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Cards tilt toward the pointer on a spring, so they overshoot and settle when it moves or leaves.
+    const CARD = '.item, .sum-card';
+    const springs = new Map();
+    let hot = null;
+    function spring(el) {
+      let s = springs.get(el);
+      if (!s) { s = {rx: 0, ry: 0, lift: 0, vrx: 0, vry: 0, vlift: 0, trx: 0, try_: 0, tlift: 0}; springs.set(el, s); }
+      return s;
+    }
+    function release() {
+      if (!hot) return;
+      const s = spring(hot);
+      s.trx = s.try_ = s.tlift = 0;
+      hot = null;
+    }
+    document.addEventListener('pointermove', (ev) => {
+      pointer.x = ev.clientX; pointer.y = ev.clientY; pointer.seen = true;
+      if (ev.pointerType === 'touch') return;
+      const el = ev.target instanceof Element ? ev.target.closest(CARD) : null;
+      if (el !== hot) {
+        release();
+        hot = el;
+        if (el) {                                   // a nudge on entry, in the direction of travel
+          const s = spring(el);
+          s.vrx += -(ev.movementY || 0) * 2.5;
+          s.vry += (ev.movementX || 0) * 2.5;
+        }
+      }
+      if (!el) return;
+      const box = el.getBoundingClientRect();
+      const nx = (ev.clientX - box.left) / box.width - 0.5, ny = (ev.clientY - box.top) / box.height - 0.5;
+      const max = el.classList.contains('item') ? 2.4 : 7;   // wide cards need far less tilt
+      const s = spring(el);
+      s.trx = -ny * 2 * max; s.try_ = nx * 2 * max; s.tlift = -3;
+    }, {passive: true});
+    document.addEventListener('pointerdown', (ev) => {
+      const el = ev.target instanceof Element ? ev.target.closest(CARD) : null;
+      if (el && ev.pointerType !== 'touch') spring(el).vlift += 90;      // press makes the card dip and bounce
+    }, {passive: true});
+    document.documentElement.addEventListener('pointerleave', release);
+    window.addEventListener('blur', release);
+
+    const b = {x: W * 0.78, y: 120, vx: 0, vy: 0, angle: 0};
+    fly.hidden = false;
+
+    let last = performance.now(), t = 0;
+    function frame(now) {
+      const dt = Math.min(0.033, Math.max(0, (now - last) / 1000));
+      last = now; t += dt;
+
+      // particles: drift up with a sway, pushed aside by the pointer
+      ctx.clearRect(0, 0, W, H);
+      const damp = Math.exp(-4 * dt);
+      for (let i = 0; i < parts.length; i++) {
+        const p = parts[i];
+        if (pointer.seen) {
+          const dx = p.x - pointer.x, dy = p.y - pointer.y, d = Math.hypot(dx, dy);
+          if (d < 130 && d > 0.01) { const f = (1 - d / 130) * 420; p.vx += dx / d * f * dt; p.vy += dy / d * f * dt; }
+        }
+        p.vx *= damp; p.vy *= damp; p.phase += dt * 0.8;
+        p.x += (p.vx + Math.cos(p.phase) * p.sway) * dt;
+        p.y += (p.vy - p.rise) * dt;
+        if (p.y < -12) parts[i] = spawn(false);
+        else if (p.x < -12) p.x = W + 12;
+        else if (p.x > W + 12) p.x = -12;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fillStyle = p.color; ctx.fill();
+      }
+
+      // butterfly: a loose spring toward a fluttering point beside the pointer
+      let tx = pointer.seen ? pointer.x + 26 : W * 0.78, ty = pointer.seen ? pointer.y - 30 : 120;
+      tx += Math.sin(t * 2.1) * 22 + Math.sin(t * 0.7) * 14;
+      ty += Math.cos(t * 1.6) * 16 + Math.sin(t * 3.3) * 6;
+      b.vx += ((tx - b.x) * 38 - b.vx * 7) * dt;
+      b.vy += ((ty - b.y) * 38 - b.vy * 7) * dt;
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      const speed = Math.hypot(b.vx, b.vy);
+      const heading = speed > 25 ? Math.atan2(b.vy, b.vx) + Math.PI / 2 : Math.sin(t * 1.3) * 0.25;
+      b.angle += Math.atan2(Math.sin(heading - b.angle), Math.cos(heading - b.angle)) * Math.min(1, dt * 8);
+      fly.style.transform = `translate(${b.x.toFixed(1)}px, ${b.y.toFixed(1)}px) rotate(${b.angle.toFixed(3)}rad)`;
+
+      // card springs (underdamped, so they wobble)
+      for (const [el, s] of springs) {
+        if (!el.isConnected) { springs.delete(el); if (hot === el) hot = null; continue; }
+        s.vrx += (-190 * (s.rx - s.trx) - 9 * s.vrx) * dt;
+        s.vry += (-190 * (s.ry - s.try_) - 9 * s.vry) * dt;
+        s.vlift += (-190 * (s.lift - s.tlift) - 11 * s.vlift) * dt;
+        s.rx += s.vrx * dt; s.ry += s.vry * dt; s.lift += s.vlift * dt;
+        const resting = el !== hot && Math.abs(s.rx) + Math.abs(s.ry) + Math.abs(s.lift) < 0.02 && Math.abs(s.vrx) + Math.abs(s.vry) + Math.abs(s.vlift) < 0.2;
+        if (resting) { el.style.transform = ''; springs.delete(el); continue; }
+        el.style.transform = `perspective(900px) rotateX(${s.rx.toFixed(3)}deg) rotateY(${s.ry.toFixed(3)}deg) translateY(${s.lift.toFixed(2)}px)`;
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+
   // ---- start ---------------------------------------------------------
-  load();
+  // Fetch the icon set first: icons created while their data is still loading can come out blank.
+  const iconsReady = new Promise((resolve) => {
+    const Icon = customElements.get('iconify-icon');
+    if (!Icon || !Icon.loadIcons) { resolve(); return; }
+    const names = ['cup-hot', 'refresh', 'file-download', 'shop', 'cart-large-2', 'copy', 'diskette', 'undo-left-round',
+      'danger-triangle', 'add-circle', 'minus-circle', 'widget', 'trash-bin-trash', 'box-minimalistic', ...Object.values(CAT_ICONS)];
+    Icon.loadIcons(names.map((n) => `solar:${n}-bold-duotone`), (_loaded, _missing, pending) => { if (!pending.length) resolve(); });
+    setTimeout(resolve, 2500);            // never hold the stock list back for long
+  });
+  iconsReady.then(load);
 })();
 </script>
 </body>
