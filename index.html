@@ -140,6 +140,26 @@
     .btn, .tab, .chip, .sum-card, .item { transition: border-color .12s, background-color .12s, color .12s, box-shadow .12s; }
   }
 
+  /* Sign in, forms, users */
+  .signin { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+  .signin-card { width: 100%; max-width: 400px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px; display: flex; flex-direction: column; gap: 18px; }
+  .signin-card h1 { margin: 0; font-size: 26px; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+  .signin-card h1 iconify-icon { color: var(--accent); }
+  .signin-card p { margin: 0; color: var(--muted); }
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .field label { font-size: 15px; font-weight: 600; }
+  .field input, .field select { border: 1px solid var(--line-strong); border-radius: 8px; padding: 11px 12px; background: var(--card); font: inherit; font-size: 17px; color: inherit; width: 100%; }
+  .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 16px; align-items: end; }
+  .form-msg { grid-column: 1 / -1; font-size: 15px; color: var(--muted); }
+  .form-msg.is-error { color: var(--bad); }
+  .panel-body { padding: 18px 20px; }
+  .panel-body + .panel-body { border-top: 1px solid var(--line); }
+  .user-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .user-name { flex: 1 1 160px; display: inline-flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; }
+  .user-name iconify-icon { color: var(--accent); }
+  .user-date { color: var(--muted); font-size: 15px; }
+  .who { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 15px; margin-right: 4px; }
+
   /* Icons (Iconify, Solar bold duotone) */
   iconify-icon { display: inline-block; width: 1em; height: 1em; font-size: 1.25em; flex: none; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
@@ -151,36 +171,63 @@
   .stepper button { display: grid; place-items: center; }
   .stepper button iconify-icon { font-size: 24px; color: var(--accent); }
 
-  /* Motion layer: particles behind the page, butterfly above it */
+  /* Motion layer: particles behind the page; the dragon and its sparks above it */
   #fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
   .wrap { position: relative; z-index: 1; }
-  .butterfly { position: fixed; left: 0; top: 0; width: 38px; height: 38px; margin: -19px 0 0 -19px; z-index: 30; pointer-events: none; will-change: transform; }
-  .butterfly svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(38, 42, 23, .18)); }
-  .butterfly .wings { transform-box: view-box; transform-origin: 50% 50%; animation: flap .2s ease-in-out infinite alternate; }
-  @keyframes flap { from { transform: scaleX(1); } to { transform: scaleX(.2); } }
+  #fx-top { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 29; pointer-events: none; }
+  .dragon { position: fixed; left: 0; top: 0; width: 52px; height: 52px; margin: -26px 0 0 -26px; z-index: 30; pointer-events: none; will-change: transform; }
+  .dragon svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(38, 42, 23, .18)); }
+  .dragon .wing { transform-box: fill-box; transform-origin: 50% 100%; animation: flap .22s ease-in-out infinite alternate; }
+  .dragon .flame { transform-box: fill-box; transform-origin: 0 50%; transform: scale(var(--fire, 0)); opacity: var(--fire, 0); }
+  @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.4); } }
   .item, .sum-card { will-change: transform; }
-  @media (prefers-reduced-motion: reduce) { #fx, .butterfly { display: none; } }
+  @media (prefers-reduced-motion: reduce) { #fx, #fx-top, .dragon { display: none; } }
 </style>
 </head>
 <body>
 
 <canvas id="fx" aria-hidden="true"></canvas>
-<div class="butterfly" id="butterfly" aria-hidden="true" hidden>
-  <svg viewBox="0 0 40 40">
-    <g class="wings">
-      <path d="M20 19 C14 6 3 5 3 13 C3 19 11 21 20 20 Z" fill="#e8590c"/>
-      <path d="M20 19 C26 6 37 5 37 13 C37 19 29 21 20 20 Z" fill="#e8590c"/>
-      <path d="M20 21 C13 21 7 25 9 31 C11 36 18 30 20 22 Z" fill="#f08c4a"/>
-      <path d="M20 21 C27 21 33 25 31 31 C29 36 22 30 20 22 Z" fill="#f08c4a"/>
-      <circle cx="9" cy="12" r="2" fill="#fff1e6"/>
-      <circle cx="31" cy="12" r="2" fill="#fff1e6"/>
+<canvas id="fx-top" aria-hidden="true"></canvas>
+<div class="dragon" id="dragon" aria-hidden="true" hidden>
+  <svg viewBox="0 0 80 80">
+    <path d="M22 48 C11 52 7 44 6 36 L2 39 L5 28 L11 35 L8 36 C9 42 13 46 22 44 Z" fill="#c2410c"/>
+    <rect x="27" y="54" width="6" height="10" rx="3" fill="#c2410c"/>
+    <rect x="40" y="54" width="6" height="10" rx="3" fill="#c2410c"/>
+    <ellipse cx="35" cy="46" rx="16" ry="13" fill="#e8590c"/>
+    <ellipse cx="37" cy="51" rx="10" ry="7" fill="#ffd8a8"/>
+    <g class="wing"><path d="M31 40 C23 20 41 14 47 22 C42 23 42 28 44 31 C39 30 37 34 39 39 Z" fill="#6f7620"/></g>
+    <path d="M48 24 L46 14 L53 21 Z" fill="#7a2e0e"/>
+    <circle cx="52" cy="31" r="9.5" fill="#e8590c"/>
+    <ellipse cx="60" cy="35" rx="6.5" ry="4.8" fill="#e8590c"/>
+    <circle cx="55" cy="29" r="2.8" fill="#fff"/>
+    <circle cx="56" cy="29" r="1.5" fill="#262a17"/>
+    <g class="flame">
+      <path d="M66 35 C71 28 80 29 86 35 C80 41 71 42 66 35 Z" fill="#f59f00"/>
+      <path d="M67 35 C70 32 75 32 79 35 C75 38 70 38 67 35 Z" fill="#fff3bf"/>
     </g>
-    <rect x="19" y="12" width="2" height="16" rx="1" fill="#262a17"/>
-    <path d="M20 13 C18 9 16 8 15 7 M20 13 C22 9 24 8 25 7" stroke="#262a17" stroke-width="1" fill="none" stroke-linecap="round"/>
   </svg>
 </div>
 
-<div class="wrap" id="view-app">
+<main class="signin" id="view-signin" hidden>
+  <form class="signin-card" id="signin-form" novalidate>
+    <div>
+      <h1><iconify-icon icon="solar:cup-hot-bold-duotone" aria-hidden="true"></iconify-icon>Café Stock Tracker</h1>
+      <p>Sign in to view and update stock.</p>
+    </div>
+    <div class="field">
+      <label for="signin-user">Username</label>
+      <input id="signin-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+    </div>
+    <div class="field">
+      <label for="signin-pass">Password</label>
+      <input id="signin-pass" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <div class="form-msg is-error" id="signin-error" role="alert" hidden></div>
+    <button class="btn btn-primary" id="signin-submit" type="submit"><iconify-icon icon="solar:login-2-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Sign in</span></button>
+  </form>
+</main>
+
+<div class="wrap" id="view-app" hidden>
   <header class="top">
     <div>
       <h1><iconify-icon icon="solar:cup-hot-bold-duotone" aria-hidden="true"></iconify-icon>Café Stock Tracker</h1>
@@ -189,6 +236,8 @@
     <div class="top-actions">
       <button class="btn" id="btn-refresh" type="button"><iconify-icon icon="solar:refresh-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Refresh</span></button>
       <button class="btn" id="btn-export" type="button" disabled><iconify-icon icon="solar:file-download-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Export PDF</span></button>
+      <span class="who" id="who"></span>
+      <button class="btn btn-quiet" id="btn-signout" type="button"><iconify-icon icon="solar:logout-2-bold-duotone" aria-hidden="true"></iconify-icon><span data-label>Sign out</span></button>
     </div>
   </header>
 
@@ -215,7 +264,9 @@
   const MAX_QTY = 99999;
 
   const $ = (id) => document.getElementById(id);
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth: {persistSession: false, autoRefreshToken: false}});
+  const LOGIN_DOMAIN = 'actiontracker.app';     // usernames sign in as <username>@actiontracker.app
+  const ACCOUNT_TAB = '__account__';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // ---- state ---------------------------------------------------------
   let rows = [];                 // latest count per outlet + item
@@ -226,6 +277,7 @@
   const saving = new Set();
   let activeTab = null;
   let activeCategory = 'All';
+  let me = null;                 // the signed-in user: {id, username, role}
 
   // ---- helpers -------------------------------------------------------
   function h(tag, attrs, ...kids) {
@@ -294,7 +346,7 @@
     byKey = new Map(rows.map((r) => [keyOf(r), r]));
     for (const key of Array.from(edits.keys())) if (!byKey.has(key)) edits.delete(key);
     const names = outlets();
-    if (activeTab !== ORDER_TAB && !names.includes(activeTab)) activeTab = names[0] || ORDER_TAB;
+    if (activeTab !== ORDER_TAB && activeTab !== ACCOUNT_TAB && !names.includes(activeTab)) activeTab = names[0] || ORDER_TAB;
     renderAll();
   }
   $('btn-refresh').addEventListener('click', load);
@@ -438,7 +490,10 @@
     const nav = $('tabs');
     const tab = (id, text) => h('button', {class: 'tab', type: 'button', role: 'tab', 'data-tab': id, onclick: () => selectTab(id)},
       icon(id === ORDER_TAB ? 'cart-large-2' : 'shop'), text, h('span', {class: 'pill num', 'data-role': 'pill'}, '0'));
-    nav.replaceChildren(...outlets().map((name) => tab(name, name)), tab(ORDER_TAB, 'Order from suppliers'));
+    const isAdmin = me && me.role === 'admin';
+    const account = h('button', {class: 'tab', type: 'button', role: 'tab', 'data-tab': ACCOUNT_TAB, onclick: () => selectTab(ACCOUNT_TAB)},
+      icon(isAdmin ? 'users-group-rounded' : 'user-circle'), isAdmin ? 'Users' : 'Account');
+    nav.replaceChildren(...outlets().map((name) => tab(name, name)), tab(ORDER_TAB, 'Order from suppliers'), account);
   }
 
   function selectTab(id) {
@@ -483,6 +538,7 @@
     cardSync.clear();
     const panel = $('panel');
     if (activeTab === ORDER_TAB) { panel.replaceChildren(buildOrder()); return; }
+    if (activeTab === ACCOUNT_TAB) { panel.replaceChildren(buildAccount()); return; }
     const mine = rows.filter((r) => r.outlet === activeTab);
     const cats = Array.from(new Set(mine.map((r) => r.category))).sort();
     if (activeCategory !== 'All' && !cats.includes(activeCategory)) activeCategory = 'All';
@@ -645,10 +701,11 @@
   });
   window.addEventListener('beforeunload', (ev) => { if (edits.size) { ev.preventDefault(); ev.returnValue = ''; } });
 
-  // ---- motion: particles, butterfly, card wobble ------------------------
+  // ---- motion: particles, fire-breathing dragon, card wobble -------------
   (function motion() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const canvas = $('fx'), ctx = canvas.getContext('2d'), fly = $('butterfly');
+    const canvas = $('fx'), ctx = canvas.getContext('2d'), fly = $('dragon');
+    const top = $('fx-top'), ctx2 = top.getContext('2d');
     const COLORS = ['rgba(111,118,32,.20)', 'rgba(196,191,113,.40)', 'rgba(150,158,70,.26)', 'rgba(232,89,12,.14)'];
     const pointer = {x: 0, y: 0, seen: false};
     let W = 0, H = 0, parts = [];
@@ -666,6 +723,8 @@
       W = window.innerWidth; H = window.innerHeight;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      top.width = canvas.width; top.height = canvas.height;
+      ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
       const n = Math.max(18, Math.min(70, Math.round(W * H / 22000)));
       while (parts.length < n) parts.push(spawn(true));
       parts.length = n;
@@ -715,7 +774,9 @@
     document.documentElement.addEventListener('pointerleave', release);
     window.addEventListener('blur', release);
 
-    const b = {x: W * 0.78, y: 120, vx: 0, vy: 0, angle: 0};
+    const b = {x: W * 0.78, y: 120, vx: 0, vy: 0, face: -1, flip: -1, tilt: 0, fire: 0};
+    const MOUTH = {x: 25, y: -3};          // the snout, in px from the dragon's centre when it faces right
+    let sparks = [];
     fly.hidden = false;
 
     let last = performance.now(), t = 0;
@@ -732,6 +793,10 @@
           const dx = p.x - pointer.x, dy = p.y - pointer.y, d = Math.hypot(dx, dy);
           if (d < 130 && d > 0.01) { const f = (1 - d / 130) * 420; p.vx += dx / d * f * dt; p.vy += dy / d * f * dt; }
         }
+        if (b.fire > 0.2) {
+          const fx = b.x + b.face * 60, dx = p.x - fx, dy = p.y - b.y, d = Math.hypot(dx, dy);
+          if (d < 110 && d > 0.01) { const f = (1 - d / 110) * 900 * b.fire; p.vx += (dx / d * 0.5 + b.face * 0.5) * f * dt; p.vy += dy / d * 0.5 * f * dt; }
+        }
         p.vx *= damp; p.vy *= damp; p.phase += dt * 0.8;
         p.x += (p.vx + Math.cos(p.phase) * p.sway) * dt;
         p.y += (p.vy - p.rise) * dt;
@@ -741,17 +806,46 @@
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fillStyle = p.color; ctx.fill();
       }
 
-      // butterfly: a loose spring toward a fluttering point beside the pointer
-      let tx = pointer.seen ? pointer.x + 26 : W * 0.78, ty = pointer.seen ? pointer.y - 30 : 120;
-      tx += Math.sin(t * 2.1) * 22 + Math.sin(t * 0.7) * 14;
-      ty += Math.cos(t * 1.6) * 16 + Math.sin(t * 3.3) * 6;
+      // dragon: a loose spring toward a bobbing point beside the pointer; it faces the way it flies
+      let tx = pointer.seen ? pointer.x + 30 : W * 0.78, ty = pointer.seen ? pointer.y - 34 : 120;
+      tx += Math.sin(t * 1.7) * 16 + Math.sin(t * 0.6) * 10;
+      ty += Math.cos(t * 2.4) * 10 + Math.sin(t * 3.1) * 4;
       b.vx += ((tx - b.x) * 38 - b.vx * 7) * dt;
       b.vy += ((ty - b.y) * 38 - b.vy * 7) * dt;
       b.x += b.vx * dt; b.y += b.vy * dt;
       const speed = Math.hypot(b.vx, b.vy);
-      const heading = speed > 25 ? Math.atan2(b.vy, b.vx) + Math.PI / 2 : Math.sin(t * 1.3) * 0.25;
-      b.angle += Math.atan2(Math.sin(heading - b.angle), Math.cos(heading - b.angle)) * Math.min(1, dt * 8);
-      fly.style.transform = `translate(${b.x.toFixed(1)}px, ${b.y.toFixed(1)}px) rotate(${b.angle.toFixed(3)}rad)`;
+      if (b.vx > 30) b.face = 1; else if (b.vx < -30) b.face = -1;
+      const ease = Math.min(1, dt * 10);
+      b.flip += (b.face - b.flip) * ease;
+      b.tilt += (Math.max(-0.45, Math.min(0.45, b.vy / 500)) * b.face - b.tilt) * ease;
+      b.fire += (Math.max(0, Math.min(1, (speed - 150) / 260)) - b.fire) * Math.min(1, dt * 7);
+      fly.style.transform = `translate(${b.x.toFixed(1)}px, ${b.y.toFixed(1)}px) rotate(${b.tilt.toFixed(3)}rad) scaleX(${b.flip.toFixed(3)})`;
+      fly.style.setProperty('--fire', b.fire.toFixed(2));
+
+      // sparks from the snout while it breathes fire, drawn above the page
+      if (b.fire > 0.25 && sparks.length < 90) {
+        for (let n = 0; n < 2; n++) {
+          const life = 0.3 + Math.random() * 0.35;
+          sparks.push({
+            x: b.x + MOUTH.x * b.face, y: b.y + MOUTH.y,
+            vx: b.face * (130 + Math.random() * 130) + b.vx * 0.4, vy: (Math.random() - 0.5) * 90 + b.vy * 0.3,
+            r: 1.5 + Math.random() * 2.5, life, age: 0,
+          });
+        }
+      }
+      ctx2.clearRect(0, 0, W, H);
+      if (sparks.length) {
+        sparks = sparks.filter((k) => (k.age += dt) < k.life);
+        for (const k of sparks) {
+          const u = k.age / k.life;
+          k.vx *= Math.exp(-3 * dt); k.vy -= 60 * dt;
+          k.x += k.vx * dt; k.y += k.vy * dt;
+          ctx2.globalAlpha = 1 - u;
+          ctx2.fillStyle = u < 0.3 ? '#fff3bf' : u < 0.65 ? '#f59f00' : '#e8590c';
+          ctx2.beginPath(); ctx2.arc(k.x, k.y, k.r * (1 - u * 0.5), 0, 6.283); ctx2.fill();
+        }
+        ctx2.globalAlpha = 1;
+      }
 
       // card springs (underdamped, so they wobble)
       for (const [el, s] of springs) {
@@ -769,17 +863,148 @@
     requestAnimationFrame(frame);
   })();
 
+  // ---- account and users ------------------------------------------------
+  /** Everyone who can sign in (profiles are readable by signed-in users). */
+  async function listUsers() {
+    const {data, error} = await sb.from('profiles').select('id, username, role, created_at').order('username');
+    return error ? {error: error.message} : {data: {users: data || []}};
+  }
+  /** Adds a member through the database's admin_create_user function, which only admins may call. */
+  async function createUser(username, password) {
+    const {error} = await sb.rpc('admin_create_user', {p_username: username, p_password: password});
+    return error ? {error: error.message} : {data: {}};
+  }
+  function field(id, text, attrs) {
+    const input = h('input', {id, ...attrs});
+    return {input, el: h('div', {class: 'field'}, h('label', {for: id}, text), input)};
+  }
+  function messenger() {
+    const el = h('div', {class: 'form-msg', role: 'status', hidden: true});
+    return {el, say: (text, bad) => { el.textContent = text; el.className = 'form-msg' + (bad ? ' is-error' : ''); el.hidden = false; }};
+  }
+
+  function buildAccount() {
+    const wrap = h('div', {class: 'group', style: 'gap:18px'});
+    const isAdmin = me.role === 'admin';
+
+    // your own password
+    const pw1 = field('pw-new', 'New password', {type: 'password', autocomplete: 'new-password'});
+    const pw2 = field('pw-again', 'Repeat new password', {type: 'password', autocomplete: 'new-password'});
+    const pwMsg = messenger();
+    const pwBtn = h('button', {class: 'btn btn-primary', type: 'submit'}, icon('key'), label('Change password'));
+    const pwForm = h('form', {class: 'form', novalidate: true, onsubmit: async (ev) => {
+      ev.preventDefault();
+      const a = pw1.input.value;
+      if (a.length < 8) { pwMsg.say('Use at least 8 characters.', true); return; }
+      if (a !== pw2.input.value) { pwMsg.say('The two passwords do not match.', true); return; }
+      pwBtn.disabled = true;
+      const {error} = await sb.auth.updateUser({password: a});
+      pwBtn.disabled = false;
+      if (error) { pwMsg.say(`Password not changed: ${error.message}`, true); return; }
+      pw1.input.value = pw2.input.value = '';
+      pwMsg.say('Password changed.');
+    }}, pw1.el, pw2.el, h('div', {}, pwBtn), pwMsg.el);
+    wrap.append(h('div', {class: 'panel'},
+      h('div', {class: 'panel-head'}, h('div', {},
+        h('h2', {}, 'Your account'),
+        h('p', {}, `Signed in as ${me.username}, ${isAdmin ? 'an admin' : 'a member'}.`))),
+      h('div', {class: 'panel-body'}, pwForm)));
+    if (!isAdmin) return wrap;
+
+    // everyone who can sign in, and a form to add someone
+    const list = h('div', {}, h('div', {class: 'empty'}, 'Loading users…'));
+    async function refresh() {
+      const res = await listUsers();
+      if (res.error) { list.replaceChildren(h('div', {class: 'empty form-msg is-error'}, `Could not load users: ${res.error}`)); return; }
+      const users = res.data.users || [];
+      list.replaceChildren(...users.map((u) => h('div', {class: 'user-row'},
+        h('div', {class: 'user-name'}, icon(u.role === 'admin' ? 'shield-user' : 'user'), u.username),
+        h('span', {class: 'pill' + (u.role === 'admin' ? '' : ' is-zero')}, u.role === 'admin' ? 'Admin' : 'Member'),
+        h('span', {class: 'user-date'}, u.created_at ? `Added ${fmtDay(u.created_at)}` : ''))));
+    }
+    const nu = field('nu-name', 'Username', {autocomplete: 'off', autocapitalize: 'none', spellcheck: 'false'});
+    const np = field('nu-pass', 'Initial password', {type: 'text', autocomplete: 'off'});
+    const addMsg = messenger();
+    const addBtn = h('button', {class: 'btn btn-primary', type: 'submit'}, icon('user-plus'), label('Add user'));
+    const addForm = h('form', {class: 'form', novalidate: true, onsubmit: async (ev) => {
+      ev.preventDefault();
+      const name = nu.input.value.trim().toLowerCase(), pass = np.input.value;
+      if (!/^[a-z0-9._-]{2,30}$/.test(name)) { addMsg.say('Usernames are 2 to 30 characters: lowercase letters, numbers, dot, dash or underscore.', true); return; }
+      if (pass.length < 8) { addMsg.say('The initial password needs at least 8 characters.', true); return; }
+      addBtn.disabled = true;
+      const res = await createUser(name, pass);
+      addBtn.disabled = false;
+      if (res.error) { addMsg.say(`User not added: ${res.error}`, true); return; }
+      nu.input.value = np.input.value = '';
+      addMsg.say(`${name} can now sign in with that password and change it under Account.`);
+      refresh();
+    }}, nu.el, np.el, h('div', {}, addBtn), addMsg.el);
+    wrap.append(h('div', {class: 'panel'},
+      h('div', {class: 'panel-head'}, h('div', {},
+        h('h2', {}, 'Users'),
+        h('p', {}, 'Everyone who can sign in. New users are added as members.'))),
+      list,
+      h('div', {class: 'panel-body'}, addForm)));
+    refresh();
+    return wrap;
+  }
+
+  // ---- sign in and out -------------------------------------------------
+  function leave() {
+    me = null;
+    rows = []; byKey = new Map(); edits.clear(); cardNote.clear();
+    $('view-app').hidden = true;
+    $('savebar').hidden = true;
+    $('view-signin').hidden = false;
+  }
+  async function enter(session) {
+    if (me && me.id === session.user.id) return;
+    me = {id: session.user.id, username: (session.user.email || '').split('@')[0], role: 'member'};
+    $('signin-pass').value = '';
+    $('view-signin').hidden = true;
+    $('view-app').hidden = false;
+    const {data} = await sb.from('profiles').select('username, role').eq('id', me.id).maybeSingle();
+    if (!me || me.id !== session.user.id) return;          // signed out while this was loading
+    if (data) { me.username = data.username || me.username; me.role = data.role || 'member'; }
+    $('who').replaceChildren(icon(me.role === 'admin' ? 'shield-user' : 'user'), me.username);
+    activeTab = null;
+    load();
+  }
+  $('signin-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const user = $('signin-user').value.trim().toLowerCase(), pass = $('signin-pass').value;
+    const err = $('signin-error');
+    err.hidden = true;
+    if (!user || !pass) { err.textContent = 'Enter your username and password.'; err.hidden = false; return; }
+    const btn = $('signin-submit');
+    btn.disabled = true; setLabel(btn, 'Signing in…');
+    const {error} = await sb.auth.signInWithPassword({email: user.includes('@') ? user : `${user}@${LOGIN_DOMAIN}`, password: pass});
+    btn.disabled = false; setLabel(btn, 'Sign in');
+    if (error) {
+      err.textContent = /invalid login/i.test(error.message) ? 'That username and password do not match.' : `Could not sign in: ${error.message}`;
+      err.hidden = false;
+    }
+  });
+  $('btn-signout').addEventListener('click', async () => {
+    if (edits.size && !window.confirm('You have unsaved changes. Sign out and discard them?')) return;
+    edits.clear();
+    await sb.auth.signOut();
+  });
+  // Supabase calls this on sign-in, sign-out and token refresh; defer so it never re-enters the auth client.
+  sb.auth.onAuthStateChange((_event, session) => { setTimeout(() => (session ? enter(session) : leave()), 0); });
+
   // ---- start ---------------------------------------------------------
   // Fetch the icon set first: icons created while their data is still loading can come out blank.
   const iconsReady = new Promise((resolve) => {
     const Icon = customElements.get('iconify-icon');
     if (!Icon || !Icon.loadIcons) { resolve(); return; }
     const names = ['cup-hot', 'refresh', 'file-download', 'shop', 'cart-large-2', 'copy', 'diskette', 'undo-left-round',
-      'danger-triangle', 'add-circle', 'minus-circle', 'widget', 'trash-bin-trash', 'box-minimalistic', ...Object.values(CAT_ICONS)];
+      'danger-triangle', 'add-circle', 'minus-circle', 'widget', 'trash-bin-trash', 'box-minimalistic',
+      'login-2', 'logout-2', 'user', 'user-circle', 'users-group-rounded', 'user-plus', 'key', 'shield-user', ...Object.values(CAT_ICONS)];
     Icon.loadIcons(names.map((n) => `solar:${n}-bold-duotone`), (_loaded, _missing, pending) => { if (!pending.length) resolve(); });
     setTimeout(resolve, 2500);            // never hold the stock list back for long
   });
-  iconsReady.then(load);
+  iconsReady.then(() => sb.auth.getSession()).then(({data}) => (data.session ? enter(data.session) : leave()));
 })();
 </script>
 </body>
